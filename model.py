@@ -1,77 +1,71 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Dec 30 11:48:55 2018
+
+@author: gaurav
+
+"""
+
 ###############################################################################
 ### importing Data
 def get_Data():
-    #import preprocessing
-    #from preprocessing import main
-    #from preprocessing import X_train , X_test , Y_train , Y_test
-    #print(X_train)
-    #print(X_test)
-    #print(Y_train)
-    #print(Y_test
-    
     from pre import X_train , X_test , Y_train , Y_test
     print(X_train.shape[1])
+
     return X_train , X_test , Y_train , Y_test
-
-
 
 
 ###############################################################################
 ### Building the Model
 def build_Model(X_train, X_test, Y_train, Y_test):
     from keras.models import Sequential
-    from keras.layers import Dense, Activation, Flatten
-    from keras.layers import BatchNormalization
-    from keras.layers import Dropout
+    from keras.layers import Dense
     from keras.layers.advanced_activations import PReLU
 
-
     model = Sequential()
-    model.add(Dense(351, input_dim=X_train.shape[1], init='glorot_normal'))
-    model.add(BatchNormalization())
-    model.add(Activation('relu'))
-    model.add(Dropout(0.578947))
     
-    model.add(Dense(293, init='glorot_normal'))
-    model.add(BatchNormalization())
-    model.add(Activation('relu'))
-    model.add(Dropout(0.26666))
-    
-    model.add(Dense(46, init='glorot_normal'))
-    model.add(BatchNormalization())
-    model.add(Activation('relu'))
-    model.add(Dropout(0.188888))
-    
-    model.add(Dense(1, init='glorot_normal'))
-    model.compile(loss='mae', optimizer='adadelta')
-    return model
+    model.add(Dense(output_dim = 1153, init = 'uniform', activation= 'relu', input_dim = X_train.shape[1]))
 
+    model.add(Dense(output_dim = 832, init = 'uniform', activation='relu'))
+
+    model.add(Dense(output_dim = 512, init = 'uniform', activation='relu'))
+
+    model.add(Dense(output_dim = 256, init = 'uniform', activation='relu'))
+    
+    model.add(Dense(output_dim = 128, init = 'uniform', activation='relu'))
+
+    model.add(Dense(output_dim = 64, init = 'uniform', activation='relu'))
+
+    model.add(Dense(output_dim = 1, init = 'uniform', activation='linear'))
+    
+
+    ### Compile the network:
+    model.compile(loss='mean_absolute_error', optimizer='adam', metrics=['mean_absolute_error'])
+
+    return model	
 
 
 ###############################################################################
 ### printing the model summary
 def get_Model_Summary(R_model):    
-    ### print the summary
     R_model.summary()
-
 
 
 ###############################################################################
 ### Save model Weights
 def save_Model(R_model):    
-
-    ### Save model Weights
     SaveFileName = 'saved_Model/Saved_model_weights.h5'
-    R_model.save_weights(SaveFileName)
+    Saved_Model = R_model.save_weights(SaveFileName)
     type(R_model)
 
 
-
+###############################################################################
+### Make Predictions
 def make_Predictions(Saved_model,X_test):
     Y_pred = Saved_model.predict(X_test)
     print(Y_pred)
     return Y_pred
-
 
 
 # list all data in history
@@ -79,7 +73,7 @@ def make_Predictions(Saved_model,X_test):
 def plot_Loss(History):
     ### importing matplotlib
     import matplotlib.pyplot as plt
-        
+
     #dict_keys(['val_loss', 'val_mean_absolute_error', 'loss', 'mean_absolute_error'])
     plt.plot(History.history['loss'])
     plt.plot(History.history['val_loss'])
@@ -100,7 +94,7 @@ def plot_Accuracy(History):
     plt.plot(History.history['acc'])
     plt.plot(History.history['val_acc'])
     plt.title('model accuracy')
-    plt.ylabel('accuracy')
+    plt.ylabel('validation accuracy')
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper left')
     plt.show()
@@ -122,26 +116,31 @@ def main():
     #import preprocessing
     X_train, X_test, Y_train, Y_test = get_Data()
 
-
     ### Building the Model
     R_model = build_Model(X_train, X_test, Y_train, Y_test)
 
+    get_Model_Summary(R_model)
     
     ### Saving the checkpoints
     from keras.callbacks import ModelCheckpoint
     checkpoint_name = 'checkpoints/Weights-{epoch:03d}--{val_loss:.5f}.hdf5' 
     checkpoint = ModelCheckpoint(checkpoint_name, monitor='val_loss', verbose = 1, save_best_only = True, mode ='auto')
     callbacks_list = [checkpoint]
-            
+
     ### training the model    
-    History = R_model.fit(X_train, Y_train, epochs=2, batch_size=16, validation_split = 0.2, callbacks=callbacks_list)
+    History = R_model.fit(X_train, Y_train, epochs=1, batch_size=16, validation_split = 0.2, callbacks=callbacks_list)
+
+
+    Y_pred = R_model.predict(X_test)
+    print(Y_pred)
+    print(Y_test)
 
 
     ### save the model
     save_Model(R_model)
 
 
-    plot_Accuracy(History)
+    #plot_Accuracy(History)
     plot_Loss(History)
 
     print(type(History))
@@ -149,7 +148,7 @@ def main():
     print(History.history.values())
     
 
-
+    #Varience Score is :  0.5271425616083181
     print("Program Exicuted Succesfully")
 
 
